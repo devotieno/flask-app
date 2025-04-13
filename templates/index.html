@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRIOTIFX - Forex Analysis</title>
+    <style>
+        /* Existing CSS from previous rewrite, with additions for the summary card */
+        :root {
+            --bg-color: #121212;
+            --text-color: #b0b0b0;
+            --card-bg: #1e1e1e;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --accent-color: #1e88e5;
+            --accent-hover: #1565c0;
+            --select-bg: #2a2a2a;
+            --select-text: #e0e0e0;
+            --button-bg: #1e88e5;
+            --button-text: #ffffff;
+            --footer-text: #757575;
+            --spinner-bg: #ffffff;
+            --spinner-accent: #1e88e5;
+            --overlay-bg: rgba(0, 0, 0, 0.7);
+            --transition: all 0.3s ease;
+        }
+
+        body.light-mode {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --card-bg: #f5f5f5;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.2);
+            --accent-color: #1976d2;
+            --accent-hover: #115293;
+            --select-bg: #ffffff;
+            --select-text: #333333;
+            --button-bg: #1976d2;
+            --button-text: #ffffff;
+            --footer-text: #555555;
+            --spinner-bg: #e0e0e0;
+            --spinner-accent: #1976d2;
+            --overlay-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+        }
+
+        /* Selection Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        select, button {
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        select {
+            background-color: var(--select-bg);
+            color: var(--select-text);
+            border: 1px solid var(--accent-color);
+        }
+
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.3);
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button.theme-toggle {
+            background-color: var(--select-bg);
+            color: var(--select-text);
+            border: 1px solid var(--accent-color);
+        }
+
+        button.theme-toggle:hover {
+            background-color: var(--accent-hover);
+            color: var(--button-text);
+        }
+
+        /* Analysis Grid */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        .analysis-card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-4px);
+        }
+
+        .analysis-card h2 {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .analysis-card p {
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .analysis-card ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .analysis-card li {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        /* Signal Styling */
+        .signal-strong-buy { color: rgb(97, 158, 4); font-weight: 600; }
+        .signal-weak-buy { color: #08f810; font-weight: 500; }
+        .signal-neutral { color: #757575; }
+        .signal-weak-sell { color: #fa0905; font-weight: 500; }
+        .signal-strong-sell { color: #700505; font-weight: 600; }
+        .error { color: #d32f2f; font-weight: 600; }
+
+        /* Summary Card (Mobile Only) */
+        .summary-card {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card h2 {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .summary-card ul {
+            list-style: none;
+        }
+
+        .summary-card li {
+            font-size: 0.95rem;
+            margin: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            color: var(--footer-text);
+            font-size: 0.9rem;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--overlay-bg);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            border: 6px solid var(--spinner-bg);
+            border-top: 6px solid var(--spinner-accent);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            select, button {
+                width: 100%;
+            }
+
+            .summary-card {
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .analysis-card, .summary-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <h1>{{ display_pair }} Analysis</h1>
+    </header>
+
+    <!-- Controls -->
+    <section class="controls" aria-label="Analysis controls">
+        <div class="control-group">
+            <label for="pair">Currency Pair:</label>
+            <form method="GET" action="/" id="pairForm">
+                <select name="pair" id="pair" onchange="this.form.submit()" aria-label="Select currency pair">
+                    {% for pair in available_pairs %}
+                        <option value="{{ pair }}" {% if pair == selected_pair %}selected{% endif %}>
+                            {{ PAIR_DISPLAY_NAMES[pair] }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        <div class="control-group">
+            <label for="autoRefresh">Auto-Refresh:</label>
+            <select id="autoRefresh" aria-label="Select auto-refresh interval">
+                <option value="0">Off</option>
+                <option value="5">5 Minutes</option>
+                <option value="15">15 Minutes</option>
+                <option value="30">30 Minutes</option>
+                <option value="60">60 Minutes</option>
+            </select>
+        </div>
+    
+        <button onclick="refreshData()" aria-label="Refresh data">Refresh Data</button>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">Toggle Theme</button>
+    </section>
+
+    <!-- Summary Card (Mobile Only) -->
+    <article class="summary-card" aria-label="Trading signals summary">
+        <h2>Signals Summary</h2>
+        <ul>
+            {% for interval in intervals %}
+                <li>
+                    <span>{{ interval.upper() }}:</span>
+                    {% if 'error' in results[interval] %}
+                        <span class="error">N/A</span>
+                    {% else %}
+                        <span class="signal-{{ results[interval]['signal_interpretation']|lower|replace(' ', '-') }}">
+                            {{ results[interval]['signal_interpretation'] }}
+                        </span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <!-- Analysis Grid -->
+    <section class="analysis-grid" aria-label="Analysis results">
+        {% for interval in intervals %}
+            <article class="analysis-card">
+                <h2>{{ interval.upper() }} Interval</h2>
+                {% if 'error' in results[interval] %}
+                    <p class="error">{{ results[interval]['error'] }}</p>
+                {% else %}
+                    <p><strong>Timestamp:</strong> {{ results[interval]['latest_time'] }}</p>
+                    <p><strong>Current Price:</strong> {{ "%.5f"|format(results[interval]['current_price']) }}</p>
+                    <p><strong>Signal Value:</strong> {{ "%.2f"|format(results[interval]['latest_signal']) }}</p>
+                    <p><strong>Trading Signal:</strong>
+                        <span class="signal-{{ results[interval]['signal_interpretation']|lower|replace(' ', '-') }}">
+                            {{ results[interval]['signal_interpretation'] }}
+                        </span>
+                    </p>
+                    <p><strong>Buy Position:</strong></p>
+                    <ul>
+                        <li>Stop Loss: {{ "%.5f"|format(results[interval]['stop_loss_long']) }}</li>
+                        <li>Take Profit: {{ "%.5f"|format(results[interval]['take_profit_long']) }}</li>
+                    </ul>
+                    <p><strong>Sell Position:</strong></p>
+                    <ul>
+                        <li>Stop Loss: {{ "%.5f"|format(results[interval]['stop_loss_short']) }}</li>
+                        <li>Take Profit: {{ "%.5f"|format(results[interval]['take_profit_short']) }}</li>
+                    </ul>
+                    <p><strong>Market Regime:</strong> {{ results[interval]['market_regime'] }}</p>
+                    <p><strong>Backtest Results:</strong></p>
+                    <ul>
+                        <li>Total Return: {{ "%.2f"|format(results[interval]['backtest']['total_return']) }}%</li>
+                        <li>Total Trades: {{ results[interval]['backtest']['total_trades'] }}</li>
+                        <li>Win Rate: {{ "%.2f"|format(results[interval]['backtest']['win_rate']) }}%</li>
+                        <li>Sharpe Ratio: {{ "%.2f"|format(results[interval]['backtest']['sharpe_ratio']) }}</li>
+                        <li>Max Drawdown: {{ "%.2f"|format(results[interval]['backtest']['max_drawdown']) }}%</li>
+                    </ul>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>Developed by Brian Okoth © 2025</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const autoRefresh = document.getElementById('autoRefresh');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        let refreshInterval = null;
+
+        // Theme Management
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        });
+
+        // Loading Overlay
+        document.getElementById('pairForm').addEventListener('submit', () => {
+            loadingOverlay.style.display = 'flex';
+        });
+
+        window.addEventListener('load', () => {
+            loadingOverlay.style.display = 'none';
+        });
+
+        // Auto-Refresh
+        function setupAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            const minutes = parseInt(autoRefresh.value);
+            localStorage.setItem('autoRefresh', minutes);
+            if (minutes > 0) {
+                refreshInterval = setInterval(() => {
+                    loadingOverlay.style.display = 'flex';
+                    window.location.reload();
+                }, minutes * 60 * 1000);
+            }
+        }
+
+        autoRefresh.value = localStorage.getItem('autoRefresh') || '0';
+        autoRefresh.addEventListener('change', setupAutoRefresh);
+        setupAutoRefresh();
+
+        // Manual Refresh
+        function refreshData() {
+            loadingOverlay.style.display = 'flex';
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
